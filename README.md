@@ -5,7 +5,7 @@ Git-based distributed issue tracker. With it you can use Git repository for stor
 
 An issue (or *bug*) has the following attributes:
 
-1. Hash - unique identifier of an issue;
+1. Hash - unique identifier of the issue;
 2. Summary - a short definitive text;
 3. Description - a longer text which describes the issue in detail;
 4. Status - either *Open* or *Resolved*.
