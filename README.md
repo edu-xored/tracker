@@ -24,7 +24,7 @@ Issues are not tied to any particular branch.
 
 #### Resolve issue
 
-`git bug resolve <hash>` resolves the issue.
+`git bug resolve <hash>` resolves the issue, i.e. changes its status from *Open* to *Resolved*. If the issue already resolved, it prints 'Already resolved' and exits with a non-zero exit code.
 
 #### List issues
 
