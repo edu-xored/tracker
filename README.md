@@ -1,7 +1,7 @@
 
 # Distributed issue tracker
 
-Git-based distributed issue tracker. Allows to use Git repository for storing issues (bugs, tasks, improvements, etc). The issues are operated in a manner typical to Git and other DVCSs. I.e. when a project is fetched locally, the issues storage is fetched as well. The user then may operate locally with their copy of the issue storage, than push the updated issues.
+Git-based distributed issue tracker. With it you can use Git repository for storing issues (bugs, tasks, improvements, etc). The issues are operated in a manner typical to Git and other DVCSs. I.e. when a project is fetched locally, the issues storage is fetched as well. The user then may operate locally with their copy of the issue storage, than push the updated issues.
 
 An issue (or *bug*) has the following attributes:
 
