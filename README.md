@@ -22,6 +22,14 @@ Issues are not tied to any particular branch.
 
 `git bug new -m "Text"` works like `git commit -m`, i.e. accepts the text from the command line, without opening editors.
 
+#### Show issue
+
+`git bug <hash>` prints issue information: hash, summary, description and all other attributes listed in [README.md](README.md) in a human-readable, yet parseable manner.
+
+#### Edit issue
+
+`git bug edit <hash>` opens a text editor (like it happens with `git commit`) with the issue summary as the first line and it's description as the rest of the text. If the user closes the editor without changing the text or saving, nothing happens. If user provides some changes, the issue is edited accordingly.
+
 #### Resolve issue
 
 `git bug resolve <hash>` resolves the issue, i.e. changes its status from *Open* to *Resolved*. If the issue already resolved, it prints 'Already resolved' and exits with a non-zero exit code.
