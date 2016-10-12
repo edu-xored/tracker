@@ -53,6 +53,10 @@ Issues are not tied to any particular branch.
 
 Standard Git procedures for fetching and pushing works for issues as well. E.g. `git fetch` fetches issues from the remote, and `git push` pushes them to the remote. 
 
+## Web
+
+Web interface is described in [web.md](web.md).
+
 ## Resources
 
 * Current tasks are available in the [TODO.md](TODO.md) file.
