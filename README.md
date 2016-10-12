@@ -56,3 +56,4 @@ Standard Git procedures for fetching and pushing works for issues as well. E.g. 
 ## Resources
 
 * Current tasks are available in the [TODO.md](TODO.md) file.
+* Documentation of the Git internals: https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain
