@@ -16,7 +16,7 @@ Issues are not tied to any particular branch.
 
 ## Commands
 
-CLI is done is the form of a Git plugin and is written in Bash and, may be, C (only if Bash is not enough). 
+CLI is done in the form of a Git plugin and is written in Bash and, may be, C (only if Bash is not enough). 
 
 Docs on writing a Git plugin: https://adamcod.es/2013/07/12/how-to-create-git-plugin.html
 
