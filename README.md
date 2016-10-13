@@ -16,6 +16,10 @@ Issues are not tied to any particular branch.
 
 ## Commands
 
+CLI is done is the form of a Git plugin and is written in Bash and, may be, C (only if Bash is not enough). 
+
+Docs on writing a Git plugin: https://adamcod.es/2013/07/12/how-to-create-git-plugin.html
+
 #### New issue
 
 `git bug new` opens a text editor (like it happens with `git commit`). If the user closes the editor without any text, nothing happens. If user provides some text, the first line of the text will be the new issue's summary. The second and all subsequent lines will be the description. In this case, the new issue is created and its hash is printed.
@@ -69,3 +73,4 @@ Web interface is described in [web.md](web.md).
 
 * Current tasks are available in the [TODO.md](TODO.md) file.
 * Documentation of the Git internals: https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain
+* Article about writing a Git plugin: https://adamcod.es/2013/07/12/how-to-create-git-plugin.html
