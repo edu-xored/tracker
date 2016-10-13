@@ -53,6 +53,14 @@ Issues are not tied to any particular branch.
 
 Standard Git procedures for fetching and pushing works for issues as well. E.g. `git fetch` fetches issues from the remote, and `git push` pushes them to the remote. 
 
+#### Help
+
+`git help bug` opens a man page for the command (just like it does for the other git commands).
+
+`git bug --help` - the same effect as previous.
+
+`git bug -h` prints a short usage info (just like it does for the other git commands).
+
 ## Web
 
 Web interface is described in [web.md](web.md).
