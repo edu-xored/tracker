@@ -67,7 +67,7 @@ Standard Git procedures for fetching and pushing works for issues as well. E.g. 
 
 ## Web
 
-Web interface is described in [web.md](web.md).
+Web interface is in [tracker-web](https://github.com/edu-xored/tracker-web).
 
 ## Resources
 
