@@ -1,4 +1,4 @@
-Представление issue в модели данных git.
+# Представление issue в модели данных git.
 
 Создание issue:
 Пользователь вводит команду git bug new или git bug new -m “...”, предоставляя summary и description нового issue. В текущем репозитории git создается 3 blob объекта (“status”, “summary”, “description”), которые хранят обязательные атрибуты issue. 
