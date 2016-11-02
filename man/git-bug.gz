@@ -1,0 +1,16 @@
+.\" Manpage for git bug.
+.TH man 1 "02 November 2016" "1.0" "git bug man page"
+.SH NAME
+git bug \- some command 
+.SH SYNOPSIS
+git bug synopsis
+.SH DESCRIPTION
+git bug description.
+.SH OPTIONS
+The git bug does not take any options.
+.SH SEE ALSO
+git 
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Tatiotaeryy
