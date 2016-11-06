@@ -1,2 +1,72 @@
 #!/bin/sh
-echo Sample for git bug
+if [ "$1" = "new" ]
+then
+	git bug-new $2 $3
+else
+	if [ "$1" = "resolve" ]
+	then
+		git bug-resolve $2
+	else
+		temp=`git show-ref --hash ISSUES`
+		PARENT=`git log ISSUES --pretty=format:"%P"`
+		until [ "$PARENT" = "" ]
+		do
+			hash_of_blob=`git cat-file -p $temp^{tree}`
+			hash_of_commit=`git cat-file -p ${hash_of_blob:12:40}`
+			hash_of_status=`git ls-tree $hash_of_commit status`
+			if [ "$1" = "-a" ]
+			then
+				hash_of_summary=`git ls-tree $hash_of_commit summary`
+				summary=`git cat-file -p ${hash_of_summary:12:40}`
+				echo "$hash_of_commit" "$summary"
+			else
+				if [ "$1" = "--resolved" ]
+				then
+					if [ "`git cat-file -p ${hash_of_status:12:40}`" = "resolved" ]
+					then	
+						hash_of_summary=`git ls-tree $hash_of_commit summary`
+						summary=`git cat-file -p ${hash_of_summary:12:40}`
+						echo "$hash_of_commit" "$summary"
+					fi
+				else
+					if [ "`git cat-file -p ${hash_of_status:12:40}`" = "open" ]
+					then	
+						hash_of_summary=`git ls-tree $hash_of_commit summary`
+						summary=`git cat-file -p ${hash_of_summary:12:40}`
+						echo "$hash_of_commit" "$summary"
+					fi
+				fi
+			fi
+			temp=$temp^
+			A=`git log $temp --pretty=format:"%P"`
+	
+	
+		done
+		hash_of_blob=`git cat-file -p $temp^{tree}`
+		hash_of_commit=`git cat-file -p ${hash_of_blob:12:40}`
+		hash_of_status=`git ls-tree $hash_of_commit status`
+		if [ "$1" = "-a" ]
+		then
+			hash_of_summary=`git ls-tree $hash_of_commit summary`
+			summary=`git cat-file -p ${hash_of_summary:12:40}`
+			echo "$hash_of_commit" "$summary"
+		else
+			if [ "$1" = "--resolved" ]
+			then
+				if [ "`git cat-file -p ${hash_of_status:12:40}`" = "resolved" ]
+				then	
+					hash_of_summary=`git ls-tree $hash_of_commit summary`
+					summary=`git cat-file -p ${hash_of_summary:12:40}`
+					echo "$hash_of_commit" "$summary"
+				fi
+			else
+				if [ "`git cat-file -p ${hash_of_status:12:40}`" = "open" ]
+				then	
+					hash_of_summary=`git ls-tree $hash_of_commit summary`
+					summary=`git cat-file -p ${hash_of_summary:12:40}`
+					echo "$hash_of_commit" "$summary"
+				fi
+			fi
+		fi
+	fi
+fi
