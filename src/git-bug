@@ -38,7 +38,7 @@ else
 				fi
 			fi
 			temp=$temp^
-			A=`git log $temp --pretty=format:"%P"`
+			PARENT=`git log $temp --pretty=format:"%P"`
 	
 	
 		done
