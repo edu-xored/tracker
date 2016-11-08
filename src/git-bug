@@ -1,72 +1,62 @@
-#!/bin/sh
+#!/bin/bash
+print_issue()
+{
+        hash_of_summary="`git ls-tree $hash_of_commit summary`"
+        summary="`git cat-file -p ${hash_of_summary:12:40}`"
+        echo "$hash_of_issue" "$summary"
+}
+
+
 if [ "$1" = "new" ]
 then
-	git bug-new $2 $3
-else
-	if [ "$1" = "resolve" ]
-	then
-		git bug-resolve $2
-	else
-		temp=`git show-ref --hash ISSUES`
-		PARENT=`git log ISSUES --pretty=format:"%P"`
-		until [ "$PARENT" = "" ]
-		do
-			hash_of_blob=`git cat-file -p $temp^{tree}`
-			hash_of_commit=`git cat-file -p ${hash_of_blob:12:40}`
-			hash_of_status=`git ls-tree $hash_of_commit status`
-			if [ "$1" = "-a" ]
-			then
-				hash_of_summary=`git ls-tree $hash_of_commit summary`
-				summary=`git cat-file -p ${hash_of_summary:12:40}`
-				echo "$hash_of_commit" "$summary"
-			else
-				if [ "$1" = "--resolved" ]
-				then
-					if [ "`git cat-file -p ${hash_of_status:12:40}`" = "resolved" ]
-					then	
-						hash_of_summary=`git ls-tree $hash_of_commit summary`
-						summary=`git cat-file -p ${hash_of_summary:12:40}`
-						echo "$hash_of_commit" "$summary"
-					fi
-				else
-					if [ "`git cat-file -p ${hash_of_status:12:40}`" = "open" ]
-					then	
-						hash_of_summary=`git ls-tree $hash_of_commit summary`
-						summary=`git cat-file -p ${hash_of_summary:12:40}`
-						echo "$hash_of_commit" "$summary"
-					fi
-				fi
-			fi
-			temp=$temp^
-			PARENT=`git log $temp --pretty=format:"%P"`
-	
-	
-		done
-		hash_of_blob=`git cat-file -p $temp^{tree}`
-		hash_of_commit=`git cat-file -p ${hash_of_blob:12:40}`
-		hash_of_status=`git ls-tree $hash_of_commit status`
-		if [ "$1" = "-a" ]
-		then
-			hash_of_summary=`git ls-tree $hash_of_commit summary`
-			summary=`git cat-file -p ${hash_of_summary:12:40}`
-			echo "$hash_of_commit" "$summary"
-		else
-			if [ "$1" = "--resolved" ]
-			then
-				if [ "`git cat-file -p ${hash_of_status:12:40}`" = "resolved" ]
-				then	
-					hash_of_summary=`git ls-tree $hash_of_commit summary`
-					summary=`git cat-file -p ${hash_of_summary:12:40}`
-					echo "$hash_of_commit" "$summary"
-				fi
-			else
-				if [ "`git cat-file -p ${hash_of_status:12:40}`" = "open" ]
-				then	
-					hash_of_summary=`git ls-tree $hash_of_commit summary`
-					summary=`git cat-file -p ${hash_of_summary:12:40}`
-					echo "$hash_of_commit" "$summary"
-				fi
-			fi
-		fi
-	fi
+        shift
+        git bug-new "$@"
+        exit 0
 fi
+if [ "$1" = "resolve" ]
+then
+        shift
+        git bug-resolve "$@"
+        exit 0
+fi
+if  git show-ref --quiet --verify ISSUES;
+then 
+        exit 0
+fi
+cont_of_issues="`git ls-tree ISSUES`"
+while [ ! "$cont_of_issues" = "" ]
+do      
+        string_length=94 #ТАК НЕОБХОДИМО потому что не работает  string_length="`expr index "$cont_of_issues" \n`" КАК НАЙТИ КОНЕЦ СТРОКИ?
+        #if [ $string_length -eq 0 ]
+        #then 
+             #string_length="`expr "$cont_of_issues" : '.*'`"
+        #fi
+        string=${cont_of_issues:0:$string_length}
+        hash_of_issue="${string:12:40}"
+        hash_of_commit="`git cat-file -p $hash_of_issue`"
+        hash_of_status="`git ls-tree $hash_of_commit status`"
+        status="`git cat-file -p ${hash_of_status:12:40}`"
+        case "$1" in
+                "-a")
+                        
+                        print_issue
+	                ;;
+	        "--resolved")
+	                if [ "$status" = "resolved" ]
+	                then
+	                        print_issue
+	                fi
+	                ;;
+	       "--open")
+	                if [ "$status" = "open" ]
+	                then
+	                        print_issue
+	                fi
+	                ;;
+        esac
+		if [ "$#" -eq 0 ]
+        then
+                print_issue
+        fi
+        cont_of_issues="${cont_of_issues:$string_length}"
+done
