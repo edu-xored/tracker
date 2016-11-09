@@ -1,62 +1,58 @@
 #!/bin/bash
+
 print_issue()
 {
-        hash_of_summary="`git ls-tree $hash_of_commit summary`"
-        summary="`git cat-file -p ${hash_of_summary:12:40}`"
-        echo "$hash_of_issue" "$summary"
+	hash_of_summary="`git ls-tree $hash_of_commit summary`"
+	summary="`git cat-file -p ${hash_of_summary:12:40}`"
+	echo "$hash_of_issue" "$summary"
 }
-
 
 if [ "$1" = "new" ]
 then
-        shift
-        git bug-new "$@"
-        exit 0
+	shift
+	git bug-new "$@"
+	exit 0
 fi
+
 if [ "$1" = "resolve" ]
 then
-        shift
-        git bug-resolve "$@"
-        exit 0
+	shift
+	git bug-resolve "$@"
+	exit 0
 fi
-if  git show-ref --quiet --verify ISSUES;
+
+if ! git show-ref --quiet --verify refs/heads/ISSUES
 then 
-        exit 0
+	exit 0
 fi
+
 cont_of_issues="`git ls-tree ISSUES`"
 while [ ! "$cont_of_issues" = "" ]
 do      
-        string_length=94 #ТАК НЕОБХОДИМО потому что не работает  string_length="`expr index "$cont_of_issues" \n`" КАК НАЙТИ КОНЕЦ СТРОКИ?
-        #if [ $string_length -eq 0 ]
-        #then 
-             #string_length="`expr "$cont_of_issues" : '.*'`"
-        #fi
-        string=${cont_of_issues:0:$string_length}
-        hash_of_issue="${string:12:40}"
-        hash_of_commit="`git cat-file -p $hash_of_issue`"
-        hash_of_status="`git ls-tree $hash_of_commit status`"
-        status="`git cat-file -p ${hash_of_status:12:40}`"
-        case "$1" in
-                "-a")
-                        
-                        print_issue
-	                ;;
-	        "--resolved")
-	                if [ "$status" = "resolved" ]
-	                then
-	                        print_issue
-	                fi
-	                ;;
-	       "--open")
-	                if [ "$status" = "open" ]
-	                then
-	                        print_issue
-	                fi
-	                ;;
-        esac
-		if [ "$#" -eq 0 ]
-        then
-                print_issue
-        fi
-        cont_of_issues="${cont_of_issues:$string_length}"
+	string_length=94
+	string="${cont_of_issues:0:$string_length}"
+
+	hash_of_issue="${string:53:40}"
+	hash_of_commit="`git cat-file -p ${string:12:40}`"
+	hash_of_status="`git ls-tree $hash_of_commit status`"
+	status="`git cat-file -p ${hash_of_status:12:40}`"
+
+	case "$1" in
+		"-a")
+			print_issue
+			;;
+
+		"--resolved")
+			[ "$status" = "resolved" ] && print_issue
+			;;
+
+		"--open")
+			[ "$status" = "open" ] && print_issue
+			;;
+
+	esac
+
+	[ "$#" -eq 0 -a "$status" = "open" ] && print_issue
+
+	cont_of_issues="${cont_of_issues:$string_length}"
 done
