@@ -1,0 +1,49 @@
+#!/bin/bash
+
+REF="refs/heads/ISSUES"
+
+[ "$#" -eq 0 ] && exit 0
+
+if ! git show-ref --quiet --verify $REF
+then 
+	exit 0
+fi
+
+HASH=`git ls-tree $REF $1`
+[ "$HASH" = "" ] && exit 0
+HASH="${HASH:12:40}"
+HASH=`git cat-file -p $HASH`
+
+STATUS="`git ls-tree $HASH status`"
+STATUS="`git cat-file -p ${STATUS:12:40}`"
+
+if [ "$STATUS" = "resolved" ]
+then
+	echo already resolved
+	exit 1
+fi
+
+[ -f "./.git/index" ] && mv -f "./.git/index" "./.git/index$$"
+
+git read-tree $HASH^{tree}
+git rm status >/dev/null 2>&1
+STATUS=`echo resolved | git hash-object -w --stdin`
+git update-index --add --cacheinfo 100644 $STATUS status
+TREE=`git write-tree`
+
+git rm status >/dev/null 2>&1
+git rm summary >/dev/null 2>&1
+git rm description >/dev/null 2>&1
+
+ISSUE=`echo issue | git commit-tree $TREE -p $HASH`
+HASH=`echo $ISSUE | git hash-object -w --stdin`
+
+git read-tree $REF^{tree}
+git rm "$1" >/dev/null 2>&1
+git update-index --add --cacheinfo 120000 $HASH $1
+TREE=`git write-tree`
+ISSUE=`echo issues | git commit-tree $TREE -p $REF`
+git update-ref $REF $ISSUE
+
+rm -f "./.git/index"
+[ -f "./.git/index$$" ] && mv -f "./.git/index$$" "./.git/index"
