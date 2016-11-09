@@ -1,62 +1,51 @@
-#!/bin/sh
-FILE=".viin"
-REF="refs/ISSUES"
+#!/bin/bash
 
-if [ "$1" = "-m" ]
+FILE=".viin"
+REF="refs/heads/ISSUES"
+
+if [ "$1" = "-m" -a "$#" -ge 2 ]
 then
-	echo $2 > $FILE
+	echo "$2" > $FILE
 else
 	"${EDITOR:-vi}" $FILE
 fi
 
-if [ -s $FILE ]
+if [ -s "$FILE" ]
 then
-
-	if [ -f ./.git/index ]
-	then
-		mv ./.git/index ./.git/index2
-	fi
+	[ -f "./.git/index" ] && mv -f "./.git/index" "./.git/index$$"
 
 	STATUS=`echo open | git hash-object -w --stdin`
 	LINE=`head -1 $FILE`
 	SUMMARY=`echo $LINE | git hash-object -w --stdin`
-	DESCRIPTION=`sed -i 1d $FILE | git hash-object -w $FILE`
+	DESCRIPTION=`sed -i 1d $FILE | git hash-object -w $FILE 2>/dev/null`
 
 	git update-index --add --cacheinfo 100644 $STATUS status
 	git update-index --add --cacheinfo 100644 $SUMMARY summary
 	git update-index --add --cacheinfo 100644 $DESCRIPTION description
 	TREE=`git write-tree`
-	git rm status >> /dev/null
-	git rm summary >> /dev/null
-	git rm description >> /dev/null
+	git rm status >/dev/null 2>&1
+	git rm summary >/dev/null 2>&1
+	git rm description >/dev/null 2>&1
 
 	ISSUE=`echo issue | git commit-tree $TREE`
 	echo $ISSUE
-
-	BLOB=`echo $ISSUE | git hash-object -w --stdin`
-	git update-index --add --cacheinfo 120000 $BLOB $ISSUE
-	TREE=`git write-tree`
-	git rm $ISSUE >> /dev/null
-
+	
+	HASH=`echo $ISSUE | git hash-object -w --stdin`
 	if git show-ref --quiet --verify $REF;
-	then 
+	then
+		git read-tree $REF^{tree}
+		git update-index --add --cacheinfo 120000 $HASH $ISSUE
+		TREE=`git write-tree`
 		ISSUE=`echo issues | git commit-tree $TREE -p $REF`
 	else
+		git update-index --add --cacheinfo 120000 $HASH $ISSUE
+		TREE=`git write-tree`
 		ISSUE=`echo issues | git commit-tree $TREE`
 	fi
-
 	git update-ref $REF $ISSUE
 
-	rm ./.git/index
-
-	if [ -f ./.git/index2 ]
-	then
-		mv ./.git/index2 ./.git/index
-	fi
-
+	rm -f "./.git/index"
+	[ -f "./.git/index$$" ] && mv -f "./.git/index$$" "./.git/index"
 fi
 
-if [ -f $FILE ]
-then
-	rm $FILE
-fi
+[ -f "$FILE" ] && rm -f "$FILE"
