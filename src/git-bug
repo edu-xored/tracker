@@ -1,58 +1,117 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 print_issue()
 {
-	hash_of_summary="`git ls-tree $hash_of_commit summary`"
-	summary="`git cat-file -p ${hash_of_summary:12:40}`"
-	echo "$hash_of_issue" "$summary"
+	local issue="$1"
+	local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+	local summary="$(git cat-file -p "$(echo `git ls-tree $issue_hash summary` | awk '{print $3}' )")"
+	echo $issue $summary
 }
 
-if [ "$1" = "new" ]
-then
+get_status()
+{
+	local issue="$1"
+	local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+	local status="$(git cat-file -p "$(echo `git ls-tree $issue_hash status` | awk '{print $3}' )")"
+	echo $status
+}
+
+list_issues()
+{
+	
+	if ! git show-ref --quiet --verify $REF
+	then 
+		return
+	fi
+
+	local MODE="$1"
+
+	local issues_names="$(git ls-tree --name-only $REF)"
+	while [ ! "$issues_names" = "" ]
+	do      
+		
+		local NAME_LENGTH=40
+		local issue="$(echo "$issues_names" | awk ' NR == 1 {print $0}')"
+		local status="$(get_status $issue)"
+
+		case "$MODE" in
+			"A")
+				print_issue $issue
+				;;
+	
+			"O")
+				[ "$status" = "open" ] && print_issue $issue
+				;;
+
+			"R")
+				[ "$status" = "resolved" ] && print_issue $issue
+				;;
+
+		esac
+
+		local issues_names="$(echo "$issues_names" | awk ' NR != 1 {print $0}')"
+	done
+}
+
+usage()
+{
+	echo "usage: git bug [-a | --open | --resolved] <subcommand>"
+	echo
+	echo "<subcommand> can be :"
+	echo new $'\t\t\t' create new issue
+	echo resolve $'\t\t' resolve issue
+	echo
+	
+}
+
+main()
+{
+	
+	REF="refs/heads/ISSUES"
+
+	if [ "$#" -lt 1 ]
+	then
+		list_issues "O"
+		exit 0
+	fi
+	
+	local subcommand="$1"
 	shift
-	git bug-new "$@"
-	exit 0
-fi
-
-if [ "$1" = "resolve" ]
-then
-	shift
-	git bug-resolve "$@"
-	exit 0
-fi
-
-if ! git show-ref --quiet --verify refs/heads/ISSUES
-then 
-	exit 0
-fi
-
-cont_of_issues="`git ls-tree ISSUES`"
-while [ ! "$cont_of_issues" = "" ]
-do      
-	string_length=94
-	string="${cont_of_issues:0:$string_length}"
-
-	hash_of_issue="${string:53:40}"
-	hash_of_commit="`git cat-file -p ${string:12:40}`"
-	hash_of_status="`git ls-tree $hash_of_commit status`"
-	status="`git cat-file -p ${hash_of_status:12:40}`"
-
-	case "$1" in
+	
+	case "$subcommand" in
+		"-h")
+			usage
+			exit 0
+			;;
 		"-a")
-			print_issue
+			list_issues "A"
+			exit 0
 			;;
-
 		"--resolved")
-			[ "$status" = "resolved" ] && print_issue
+			list_issues "R"
+			exit 0
 			;;
-
 		"--open")
-			[ "$status" = "open" ] && print_issue
+			list_issues "O"
+			exit 0
 			;;
-
 	esac
+	
+	local workingdir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+	if [ ! -e "$workingdir/git-bug-$subcommand" ]
+	then
+		usage
+		exit 1
+	fi
 
-	[ "$#" -eq 0 -a "$status" = "open" ] && print_issue
+	source "$workingdir/git-bug-$subcommand"
+	if [ ! type "git_bug_$subcommand" ]
+	then
+		usage
+		exit 1
+	fi
+	
+	git_bug_$subcommand "$@"
+}
 
-	cont_of_issues="${cont_of_issues:$string_length}"
-done
+main "$@"
