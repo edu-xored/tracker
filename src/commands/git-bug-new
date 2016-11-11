@@ -1,51 +1,66 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
-FILE=".viin"
-REF="refs/heads/ISSUES"
+get_git_dir()
+{
+	until [ -d ./.git ]; do cd ..; done; echo "$PWD/.git";
+}
 
-if [ "$1" = "-m" -a "$#" -ge 2 ]
-then
-	echo "$2" > $FILE
-else
-	"${EDITOR:-vi}" $FILE
-fi
+git_bug_new()
+{
+	REF="refs/heads/ISSUES"
 
-if [ -s "$FILE" ]
-then
-	[ -f "./.git/index" ] && mv -f "./.git/index" "./.git/index$$"
+	local GIT_DIR="`get_git_dir`"
+	local FILE="$GIT_DIR/ISSUE_EDIT"
 
-	STATUS=`echo open | git hash-object -w --stdin`
-	LINE=`head -1 $FILE`
-	SUMMARY=`echo $LINE | git hash-object -w --stdin`
-	DESCRIPTION=`sed -i 1d $FILE | git hash-object -w $FILE 2>/dev/null`
+	if [ "$1" = "-m" -a "$#" -ge 2 ]
+	then
+		echo "$2" > $FILE
+	else
+		"${EDITOR:-vi}" $FILE
+	fi
+
+	[ ! -f "$FILE" ] && exit 0
+	[ ! -s "$FILE" ] && rm -f "$FILE" && exit 0
+
+	local LINE="$(echo $(sed -n 1p $FILE | awk '$1 != "" {print $0}'))"
+
+	[ "$LINE" = "" ] && rm -f "$FILE" && exit 0
+
+	[ -f "$GIT_DIR/index" ] && mv -f "$GIT_DIR/index" "$GIT_DIR/index$$"
+
+	local STATUS=$(echo open | git hash-object -w --stdin)
+	local SUMMARY=$(echo "$LINE" | git hash-object -w --stdin)
+	local DESCRIPTION=$(sed -i 1d $FILE | git hash-object -w $FILE 2>/dev/null)
 
 	git update-index --add --cacheinfo 100644 $STATUS status
 	git update-index --add --cacheinfo 100644 $SUMMARY summary
 	git update-index --add --cacheinfo 100644 $DESCRIPTION description
-	TREE=`git write-tree`
+	local TREE=$(git write-tree)
 	git rm status >/dev/null 2>&1
 	git rm summary >/dev/null 2>&1
 	git rm description >/dev/null 2>&1
-
-	ISSUE=`echo issue | git commit-tree $TREE`
-	echo $ISSUE
 	
-	HASH=`echo $ISSUE | git hash-object -w --stdin`
-	if git show-ref --quiet --verify $REF;
+	local ISSUE=$(echo issue | git commit-tree $TREE)
+	echo $ISSUE	
+
+	local HASH=`echo $ISSUE | git hash-object -w --stdin`
+	if git show-ref --quiet --verify $REF
 	then
 		git read-tree $REF^{tree}
 		git update-index --add --cacheinfo 120000 $HASH $ISSUE
-		TREE=`git write-tree`
-		ISSUE=`echo issues | git commit-tree $TREE -p $REF`
+		local TREE=`git write-tree`
+		local ISSUES=`echo issues | git commit-tree $TREE -p $REF`
 	else
 		git update-index --add --cacheinfo 120000 $HASH $ISSUE
-		TREE=`git write-tree`
-		ISSUE=`echo issues | git commit-tree $TREE`
+		local TREE=`git write-tree`
+		local ISSUES=`echo issues | git commit-tree $TREE`
 	fi
-	git update-ref $REF $ISSUE
+	git update-ref $REF $ISSUES
 
-	rm -f "./.git/index"
-	[ -f "./.git/index$$" ] && mv -f "./.git/index$$" "./.git/index"
-fi
+	rm -f "$GIT_DIR/index"
+	[ -f "$GIT_DIR/index$$" ] && mv -f "$GIT_DIR/index$$" "$GIT_DIR/index"
 
-[ -f "$FILE" ] && rm -f "$FILE"
+	rm -f "$FILE"
+}
+
+git_bug_new "$@"
