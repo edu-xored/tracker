@@ -1,0 +1,58 @@
+#!/usr/bin/env sh
+
+get_tree_hash() 
+{
+	touch temp$$
+	
+	git cat-file -p "$1" > temp$$
+	
+	read line < temp$$
+	set $line
+	TREE_HASH=$(echo "$2")
+
+	rm -f temp$$
+}
+
+git_bug_hash()
+{
+	HASH="$1"
+
+	get_tree_hash "$1"
+
+
+	git cat-file -p $TREE_HASH 1> temp$$
+
+	while read line; do
+		
+		set $line
+		
+		case $4 in
+			"description") 
+				DESCRIPTION_HASH="$3"
+				;;
+			"summary")
+				SUMMARY_HASH="$3"
+				;;
+			"status")
+				STATUS_HASH="$3"
+				;;
+		esac
+
+	done < temp$$
+	
+	rm -f temp$$
+
+
+	echo "bug $HASH"
+
+	# STATUS=$( git cat-file -p $STATUS_HASH 0>&1)
+	# echo "Status: $STATUS"
+
+	SUMMARY=$( git cat-file -p $SUMMARY_HASH 0>&1)
+	echo "Summary: $SUMMARY"
+		
+	DESCRIPTION=$(git cat-file -p $DESCRIPTION_HASH 0>&1)
+	echo "Description: $DESCRIPTION"
+}
+
+git_bug_hash "$@"
