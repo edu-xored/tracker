@@ -42,7 +42,7 @@ list_issues()
 				;;
 		esac
 
-		let "issue_number = issue_number + 1"
+		issue_number=$((issue_number+1))
 	done
 }
 
@@ -93,7 +93,7 @@ main()
 		usage
 		exit 1
 	fi
-	source $workingdir/git-bug-$subcommand "$@"
+	"$workingdir/git-bug-$subcommand" "$@"
 }
 
 main "$@"
