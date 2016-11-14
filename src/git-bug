@@ -1,2 +1,99 @@
-#!/bin/sh
-echo Sample for git bug
+#!/usr/bin/env sh
+
+print_issue()
+{
+	local issue="$1"
+	local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+	local summary="$(git cat-file -p "$(echo `git ls-tree $issue_hash summary` | awk '{print $3}' )")"
+	echo $issue $summary
+}
+
+get_status()
+{
+	local issue="$1"
+	local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+	local status="$(git cat-file -p "$(echo `git ls-tree $issue_hash status` | awk '{print $3}' )")"
+	echo $status
+}
+
+list_issues()
+{
+	( ! git show-ref --quiet --verify $REF ) && return
+
+	local MODE="$1"
+	local issue_number=1
+	local issues_names="$(git ls-tree --name-only $REF)"
+	local count_of_issues="$(echo "$issues_names" | awk 'END { print NR }' )"
+
+	while [ $issue_number -le $count_of_issues ]
+	do
+		local issue="$(echo "$issues_names" | awk "NR == $issue_number {print \$0}")"
+		local status="$(get_status $issue)"
+
+		case "$MODE" in
+			"A")
+				print_issue $issue
+				;;
+			"O")
+				[ "$status" = "open" ] && print_issue $issue
+				;;
+			"R")
+				[ "$status" = "resolved" ] && print_issue $issue
+				;;
+		esac
+
+		issue_number=$((issue_number+1))
+	done
+}
+
+usage()
+{
+	echo "usage: git bug [-h | -a | --open | --resolved | <subcommand>]
+	<subcommand> can be :
+	new 			create new issue
+	resolve			resolve issue
+	"
+}
+
+main()
+{
+	REF="refs/heads/ISSUES"
+
+	if [ "$#" -lt 1 ]
+	then
+		list_issues "O"
+		exit 0
+	fi
+
+	local subcommand="$1"
+	shift
+
+	case "$subcommand" in
+		"-h")
+			usage
+			exit 0
+			;;
+		"-a")
+			list_issues "A"
+			exit 0
+			;;
+		"--resolved")
+			list_issues "R"
+			exit 0
+			;;
+		"--open")
+			list_issues "O"
+			exit 0
+			;;
+	esac
+
+	local workingdir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+	if [ ! -e "$workingdir/git-bug-$subcommand" ]
+	then
+		usage
+		exit 1
+	fi
+	"$workingdir/git-bug-$subcommand" "$@"
+}
+
+main "$@"
