@@ -2,14 +2,22 @@
 
 get_git_dir()
 {
-	until [ -d ./.git ]; do cd ..; done; echo "$PWD/.git";
+	local dir="$PWD"
+	until [ -d ./.git ]; do cd ..; if [ "$PWD" = "$dir" ]; then exit 1; fi; local dir="$PWD"; done; echo "$PWD/.git";
+	#Не совсем уверен как проверять невозможность поднятся выше, поэтому такой вот костыль
 }
 
 git_bug_new()
 {
 	REF="refs/heads/ISSUES"
 
-	local GIT_DIR="`get_git_dir`"
+	local GIT_DIR="$(get_git_dir)"
+	if [ "$GIT_DIR" = "" ]
+	then
+		echo "Error: There's nothing here"
+		exit 1
+	fi
+	
 	local FILE="$GIT_DIR/ISSUE_EDIT"
 
 	if [ "$1" = "-m" -a "$#" -ge 2 ]
@@ -20,11 +28,14 @@ git_bug_new()
 	fi
 
 	[ ! -f "$FILE" ] && exit 0
-	[ ! -s "$FILE" ] && rm -f "$FILE" && exit 0
 
 	local LINE="$(echo $(sed -n 1p $FILE | awk '$1 != "" {print $0}'))"
 
-	[ "$LINE" = "" ] && rm -f "$FILE" && exit 0
+	if [ "$LINE" = "" ]
+	then
+		rm -f "$FILE"
+		exit 0
+	fi
 
 	[ -f "$GIT_DIR/index" ] && mv -f "$GIT_DIR/index" "$GIT_DIR/index$$"
 
