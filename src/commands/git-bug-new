@@ -1,20 +1,12 @@
 #!/usr/bin/env sh
 
-get_git_dir()
-{
-	local dir="$PWD"
-	until [ -d ./.git ]; do cd ..; if [ "$PWD" = "$dir" ]; then exit 1; fi; local dir="$PWD"; done; echo "$PWD/.git";
-	#Не совсем уверен как проверять невозможность поднятся выше, поэтому такой вот костыль
-}
-
 git_bug_new()
 {
 	REF="refs/heads/ISSUES"
 
-	local GIT_DIR="$(get_git_dir)"
+	local GIT_DIR="$(git rev-parse --show-toplevel)"/.git
 	if [ "$GIT_DIR" = "" ]
 	then
-		echo "Error: There's nothing here"
 		exit 1
 	fi
 	
@@ -29,7 +21,8 @@ git_bug_new()
 
 	[ ! -f "$FILE" ] && exit 0
 
-	local LINE="$(echo $(sed -n 1p $FILE | awk '$1 != "" {print $0}'))"
+	local LINE="$(echo $(sed -n 1p $FILE))"
+#ЭТА СТРОЧКА БЕРЁТ ПЕРВУЮ СТРОЧКУ И УБИРАЕТ ИЗ НЕЁ ВСЕ ЛИШНИЕ ПРОБЕЛЫ И ТАБУЛЯЦИЮ (ВСЕ)
 
 	if [ "$LINE" = "" ]
 	then
@@ -56,6 +49,7 @@ git_bug_new()
 
 	local HASH=`echo $ISSUE | git hash-object -w --stdin`
 	if git show-ref --quiet --verify $REF
+#ЭТО УСЛОВИЕ, ОЧЕВИДНО, ПРЕВЯРЕТ СУЩЕСТВОВАНИЕ (ЗАНЯТОСТЬ) ССЫЛКИ ISSUES
 	then
 		git read-tree $REF^{tree}
 		git update-index --add --cacheinfo 120000 $HASH $ISSUE
