@@ -1,32 +1,45 @@
 #!/usr/bin/env sh
 
+TREE_HASH=
+
+detect_hash_error()
+{
+	if [ -z "$1" ]
+	then
+		echo "This hash ($2) is not found."
+		exit 1
+	fi
+}
+
 get_tree_hash() 
 {
-	touch temp$$
-	
-	git cat-file -p "$1" > temp$$
-	
-	read line < temp$$
-	set $line
-	TREE_HASH=$(echo "$2")
+	BUF=$(git cat-file -p "$1") 2>/dev/null
+	detect_hash_error "$BUF" "$1"
 
-	rm -f temp$$
+	set $BUF
+
+	TREE_HASH=$(echo "$2")
 }
 
 git_bug_hash()
 {
+	if [ "$#" -eq "0" ]
+	then
+		echo "Please enter the correct data."
+		exit 1
+	fi
+
 	HASH="$1"
+	get_tree_hash "$HASH"
 
-	get_tree_hash "$1"
+	BUF=$(git cat-file -p $TREE_HASH) 2>/dev/null
+	detect_hash_error "$BUF" "$TREE_HASH"
 
+	set $BUF
 
-	git cat-file -p $TREE_HASH 1> temp$$
-
-	while read line; do
-		
-		set $line
-		
-		case $4 in
+	while [ "$#" -ne "0" ]
+	do
+		case "$4" in
 			"description") 
 				DESCRIPTION_HASH="$3"
 				;;
@@ -38,21 +51,19 @@ git_bug_hash()
 				;;
 		esac
 
-	done < temp$$
-	
-	rm -f temp$$
+		shift 4
+	done
 
+	echo "Issue: $HASH"
 
-	echo "bug $HASH"
+	STATUS=$(git cat-file -p $STATUS_HASH)
+	echo "Status: $STATUS"
 
-	# STATUS=$( git cat-file -p $STATUS_HASH 0>&1)
-	# echo "Status: $STATUS"
-
-	SUMMARY=$( git cat-file -p $SUMMARY_HASH 0>&1)
+	SUMMARY=$(git cat-file -p $SUMMARY_HASH)
 	echo "Summary: $SUMMARY"
 		
-	DESCRIPTION=$(git cat-file -p $DESCRIPTION_HASH 0>&1)
-	echo "Description: $DESCRIPTION"
+	DESCRIPTION=$(git cat-file -p $DESCRIPTION_HASH)
+	echo "Description:\n$DESCRIPTION"
 }
 
 git_bug_hash "$@"
