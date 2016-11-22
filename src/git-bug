@@ -1,2 +1,143 @@
-#!/bin/sh
-echo Sample for git bug
+#!/usr/bin/env sh
+ 
+print_issue()
+{
+    local issue="$1"
+    local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+    local summary="$(git cat-file -p "$(echo `git ls-tree $issue_hash summary` | awk '{print $3}' )")"
+    echo $issue $summary
+}
+ 
+get_author()
+{
+    set $(git cat-file -p "$1")
+    echo "$4 $5"
+}
+ 
+get_status()
+{
+    local issue="$1"
+    local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+    local status="$(git cat-file -p "$(echo `git ls-tree $issue_hash status` | awk '{print $3}' )")"
+    echo $status
+}
+ 
+get_summary()
+{
+    local issue="$1"
+    local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+    local summary="$(git cat-file -p "$(echo `git ls-tree $issue_hash summary` | awk '{print $3}' )")"
+    echo $summary
+}
+ 
+ get_description()
+{
+    local issue="$1"
+    local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+    local description="$(git cat-file -p "$(echo `git ls-tree $issue_hash description` | awk '{print $3}' )")"
+    echo "$description"
+}
+ 
+list_issues()
+{
+    ( ! git show-ref --quiet --verify $REF ) && return
+ 
+    local MODE="$1"
+    local issue_number=1
+    local issues_names="$(git ls-tree --name-only $REF)"
+    local count_of_issues="$(echo "$issues_names" | awk 'END { print NR }' )"
+ 
+    while [ $issue_number -le $count_of_issues ]
+    do
+        local issue="$(echo "$issues_names" | awk "NR == $issue_number {print \$0}")"
+        local status="$(get_status $issue)"
+ 
+        case "$MODE" in
+            "A")
+                print_issue $issue
+                ;;
+            "O")
+                [ "$status" = "open" ] && print_issue $issue
+                ;;
+            "R")
+                [ "$status" = "resolved" ] && print_issue $issue
+                ;;
+        esac
+ 
+        issue_number=$((issue_number+1))
+    done
+}
+ 
+usage()
+{
+    echo "usage: git bug [-h | -a | --open | --resolved | <subcommand>]
+    <subcommand> can be :
+    new             create new issue
+    resolve         resolve issue
+    hash            prints issue information
+    "
+}
+ 
+git_bug_hash()
+{
+    if [ -z "$(git cat-file -p $1)" ]
+    then
+        usage
+        exit 1
+    fi 2>/dev/null
+ 
+    local issue="$1"
+    local author="$(get_author $issue)"
+    local status="$(get_status $issue)"
+    local summary="$(get_summary $issue)"
+    local description="$(get_description $issue)"
+ 
+    # цвета лучше обозначат информационый блок
+    TITLE_COLOR='\033[0;33m'
+    NORMAL_COLOR='\033[0m'
+
+    echo "${TITLE_COLOR}Issue: $issue ${NORMAL_COLOR}"
+    echo "Author: $author"
+    echo "Status: $status"
+    echo "Summary: $summary"
+    echo "Description: \n$description"
+}
+ 
+main()
+{
+    REF="refs/heads/ISSUES"
+ 
+    if [ "$#" -lt 1 ]
+    then
+        list_issues "O"
+        exit 0
+    fi
+ 
+    local subcommand="$1"
+    shift
+ 
+    case "$subcommand" in
+        "-h")
+            usage
+            exit 0
+            ;;
+        "-a")
+            list_issues "A"
+            exit 0
+            ;;
+        "--resolved")
+            list_issues "R"
+            exit 0
+            ;;
+        "--open")
+            list_issues "O"
+            exit 0
+            ;;
+        *)
+            git_bug_hash "$subcommand"
+            exit 0
+            ;;
+    esac
+}
+ 
+main "$@"
