@@ -6,7 +6,7 @@ git_bug_new()
 
 #ищем путь до репозитория и проверяем на его наличие
 	local GIT_DIR="$(git rev-parse --show-toplevel)"/.git
-	if [ -d "$GIT_DIR" ]
+	if [ ! -d "$GIT_DIR" ]
 	then
 		exit 1
 	fi
@@ -17,19 +17,20 @@ git_bug_new()
 #если в качестве первого параметра дана строка -m и существует второй параметр, то создаем ищуй в "тихом" режиме, иначе открывается редактор
 	if [ "$1" = "-m" -a "$#" -ge 2 ]
 	then
-		echo "$2" > $FILE
+		echo "$2" > "$FILE"
 	else
-		"${EDITOR:-vi}" $FILE
+		"${EDITOR:-vi}" "$FILE"
 	fi
 
 	[ ! -f "$FILE" ] && exit 0
 
 #считывается первая строка и убираются все незначащие пробелы + табуляция
-	local LINE="$(echo $(sed -n 1p $FILE))"
+	local LINE="$(echo $(sed -n 1p "$FILE"))"
 
 	if [ "$LINE" = "" ]
 	then
 		rm -f "$FILE"
+		echo "Issue creation was aborted because empty summary (first string)"
 		exit 0
 	fi
 
@@ -38,7 +39,7 @@ git_bug_new()
 
 	local HASH_OF_STATUS=$(echo open | git hash-object -w --stdin)
 	local HASH_OF_SUMMARY=$(echo "$LINE" | git hash-object -w --stdin)
-	local HASH_OF_DESCRIPTION=$(sed -i 1d $FILE | git hash-object -w $FILE 2>/dev/null)
+	local HASH_OF_DESCRIPTION=$(sed -i 1d "$FILE" | git hash-object -w "$FILE" 2>/dev/null)
 
 	git update-index --add --cacheinfo 100644 $HASH_OF_STATUS status
 	git update-index --add --cacheinfo 100644 $HASH_OF_SUMMARY summary
@@ -52,20 +53,20 @@ git_bug_new()
 	echo $HASH_OF_ISSUE	
 
 #HASH это хеш блоба, который хранит хэш ишуи
-	local HASH=$(echo $ISSUE | git hash-object -w --stdin)
+	local HASH=$(echo $HASH_OF_ISSUE | git hash-object -w --stdin)
 #проверка существует ли уже REF
-	if git show-ref --quiet --verify $REF
+	if git show-ref --quiet --verify "$REF"
 	then
-		git read-tree $REF^{tree}
+		git read-tree "$REF"^{tree}
 		git update-index --add --cacheinfo 120000 $HASH $HASH_OF_ISSUE
 		local TREE=$(git write-tree)
-		local HASH_OF_HASH_OF_ISSUES=$(echo HASH_OF_ISSUES | git commit-tree $TREE -p $REF)
+		local HASH_OF_ISSUES=$(echo issues | git commit-tree $TREE -p "$REF")
 	else
 		git update-index --add --cacheinfo 120000 $HASH $HASH_OF_ISSUE
 		local TREE=$(git write-tree)
-		local HASH_OF_ISSUES=$(echo HASH_OF_ISSUES | git commit-tree $TREE)
+		local HASH_OF_ISSUES=$(echo issues | git commit-tree $TREE)
 	fi
-	git update-ref $REF $HASH_OF_ISSUES
+	git update-ref "$REF" $HASH_OF_ISSUES
 
 #чистим индекс и возвращаем спрятанный
 	rm -f "$GIT_DIR/index"
