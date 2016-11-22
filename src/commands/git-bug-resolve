@@ -1,49 +1,74 @@
 #!/bin/bash
 
-REF="refs/heads/ISSUES"
+git_bug_resolve()
+{
+	REF="refs/heads/ISSUES"
 
-[ "$#" -eq 0 ] && exit 0
+#ищем путь до репозитория и проверяем на его наличие
+	local GIT_DIR="$(git rev-parse --show-toplevel)"/.git
+	if [ ! -d "$GIT_DIR" ]
+	then
+		exit 1
+	fi
 
-if ! git show-ref --quiet --verify $REF
-then 
-	exit 0
-fi
+#проверяем наличие аргументов
+	if [ "$#" -eq 0 ]
+	then
+		echo "Error: Not specified hash of issue"
+		exit 1
+	fi
 
-HASH=`git ls-tree $REF $1`
-[ "$HASH" = "" ] && exit 0
-HASH="${HASH:12:40}"
-HASH=`git cat-file -p $HASH`
+#проверка существует ли хотя бы одно issue
+	if ! git show-ref --quiet --verify "$REF"
+	then
+		echo "Error: Not created any issue"
+		exit 1
+	fi
 
-STATUS="`git ls-tree $HASH status`"
-STATUS="`git cat-file -p ${STATUS:12:40}`"
+#вычисляем хэш issue, проверяем его на существование
+#здесь и далее HASH это хеш блоба, который хранит хэш issue
+	local NAME_OF_ISSUE="$1"
+	local HASH=$(git ls-tree "$REF" "$NAME_OF_ISSUE")
+	if [ "$HASH" = "" ]
+	then
+		echo "Error: Issue not found"
+		exit 1
+	fi
+	local HASH_OF_ISSUE="$(git cat-file -p "$(echo "$HASH" | awk '{print $3}' )")"	
 
-if [ "$STATUS" = "resolved" ]
-then
-	echo already resolved
-	exit 1
-fi
+	local STATUS="$(git cat-file -p "$(echo `git ls-tree "$HASH_OF_ISSUE" status` | awk '{print $3}' )")"
+	if [ "$STATUS" = "resolved" ]
+	then
+		echo "Issue already resolved"
+		exit 1
+	fi
 
-[ -f "./.git/index" ] && mv -f "./.git/index" "./.git/index$$"
+#прячем индекс, чтобы замести следы
+	[ -f "$GIT_DIR/index" ] && mv -f "$GIT_DIR/index" "$GIT_DIR/index$$"
 
-git read-tree $HASH^{tree}
-git rm status >/dev/null 2>&1
-STATUS=`echo resolved | git hash-object -w --stdin`
-git update-index --add --cacheinfo 100644 $STATUS status
-TREE=`git write-tree`
+	git read-tree "$HASH_OF_ISSUE"^{tree}
+	git rm status >/dev/null 2>&1
 
-git rm status >/dev/null 2>&1
-git rm summary >/dev/null 2>&1
-git rm description >/dev/null 2>&1
+	local HASH_OF_STATUS=$(echo resolved | git hash-object -w --stdin)
+	git update-index --add --cacheinfo 100644 $HASH_OF_STATUS status
+	local TREE=$(git write-tree)
+	git rm status >/dev/null 2>&1
+	git rm summary >/dev/null 2>&1
+	git rm description >/dev/null 2>&1
 
-ISSUE=`echo issue | git commit-tree $TREE -p $HASH`
-HASH=`echo $ISSUE | git hash-object -w --stdin`
+	local HASH_OF_ISSUE=$(echo issue | git commit-tree $TREE -p $HASH_OF_ISSUE)
+	local HASH=$(echo $HASH_OF_ISSUE | git hash-object -w --stdin)
 
-git read-tree $REF^{tree}
-git rm "$1" >/dev/null 2>&1
-git update-index --add --cacheinfo 120000 $HASH $1
-TREE=`git write-tree`
-ISSUE=`echo issues | git commit-tree $TREE -p $REF`
-git update-ref $REF $ISSUE
+	git read-tree "$REF"^{tree}
+	git rm "$NAME_OF_ISSUE" >/dev/null 2>&1
+	git update-index --add --cacheinfo 120000 $HASH "$NAME_OF_ISSUE"
+	local TREE=$(git write-tree)
+	HASH_OF_ISSUES=$(echo issues | git commit-tree $TREE -p "$REF")
+	git update-ref "$REF" $HASH_OF_ISSUES
 
-rm -f "./.git/index"
-[ -f "./.git/index$$" ] && mv -f "./.git/index$$" "./.git/index"
+#чистим индекс и возвращаем спрятанный
+	rm -f "$GIT_DIR/index"
+	[ -f "$GIT_DIR/index$$" ] && mv -f "$GIT_DIR/index$$" "$GIT_DIR/index"
+}
+
+git_bug_resolve "$@"
