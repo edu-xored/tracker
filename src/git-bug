@@ -138,6 +138,14 @@ main()
             exit 0
             ;;
     esac
+
+	local workingdir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+	if [ ! -e "$workingdir/git-bug-$subcommand" ]
+	then
+		usage
+		exit 1
+	fi
+	"$workingdir/git-bug-$subcommand" "$@"
 }
  
 main "$@"
