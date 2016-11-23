@@ -136,7 +136,8 @@ main()
     esac
     
     # subcommand - hex число => git-bug-hash 
-    if expr "$subcommand" : "[a-f0-9]*" 1>/dev/null; then
+    if expr "$subcommand" : "[a-f0-9]*" 1>/dev/null 
+    then
         git_bug_hash "$subcommand"
         exit 0;
     fi
