@@ -142,8 +142,14 @@ main()
         exit 0
     fi
 
-    git_bug_hash "$subcommand"
-    exit 0
+    if [ $(expr length $subcommand) -eq 40 ]
+    then
+        git_bug_hash "$subcommand"
+        exit 0
+    else
+        usage
+        exit 1
+    fi
 }
  
 main "$@"
