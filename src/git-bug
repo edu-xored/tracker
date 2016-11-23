@@ -133,22 +133,17 @@ main()
             list_issues "O"
             exit 0
             ;;
-    esac
-    
-    # subcommand - hex число => git-bug-hash 
-    if expr "$subcommand" : "[a-f0-9]*" 1>/dev/null 
-    then
-        git_bug_hash "$subcommand"
-        exit 0;
-    fi
+     esac
 
     local workingdir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
-    if [ ! -e "$workingdir/git-bug-$subcommand" ]
+    if [ -e "$workingdir/git-bug-$subcommand" ]
     then
-        usage
-        exit 1
+        "$workingdir/git-bug-$subcommand" "$@"
+        exit 0
     fi
-    "$workingdir/git-bug-$subcommand" "$@"
+
+    git_bug_hash "$subcommand"
+    exit 0
 }
  
 main "$@"
