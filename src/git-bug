@@ -96,11 +96,11 @@ git_bug_hash()
     TITLE_COLOR='\033[0;33m'
     NORMAL_COLOR='\033[0m'
 
-    echo "${TITLE_COLOR}Issue: $issue ${NORMAL_COLOR}"
+    echo "${TITLE_COLOR}issue $issue ${NORMAL_COLOR}"
     echo "Author: $author"
     echo "Status: $status"
     echo "Summary: $summary"
-    echo "Description: \n$description"
+    echo "\n$description" | sed 's/^/\t/'
 }
  
 main()
