@@ -14,10 +14,12 @@ all:
 install:
 	mkdir -p $(SRC_PATH)
 	if [ -f $(SRC_PATH)/$(SRC_OBJ) ] ; then  rm $(SRC_PATH)/$(SRC_OBJ) ; fi;
+	find "$(SRC_PATH)" -name '$(SRC_OBJ)-*' -exec rm {} \;
 	install src/$(SRC_OBJ) $(SRC_PATH)
+	find "src/commands/" -name '$(SRC_OBJ)-*' -exec install {} $(SRC_PATH) \;
 
 	mkdir -p $(MAN_PATH)
-	if [ -f $(MAN_PATH)/$(MAN_OBJ) ] ; then  rm $(MAN_PATH)/$(MAN_OBJ) ; fi;
+	if [ -f $(MAN_PATH)/$(MAN_OBJ).gz ] ; then  rm $(MAN_PATH)/$(MAN_OBJ).gz ; fi;
 	install -g 0 -o 0 -m 0644 man/$(MAN_OBJ) $(MAN_PATH) 
 	gzip $(MAN_PATH)/$(MAN_OBJ)
 
@@ -27,5 +29,6 @@ install:
 
 uninstall:
 	if [ -f $(SRC_PATH)/$(SRC_OBJ) ] ; then  rm $(SRC_PATH)/$(SRC_OBJ) ; fi;
+	find "$(SRC_PATH)" -name '$(SRC_OBJ)-*' -exec rm {} \;
 	if [ -f $(MAN_PATH)/$(MAN_OBJ).gz ] ; then  rm $(MAN_PATH)/$(MAN_OBJ).gz ; fi;
 	if [ -f $(HTML_PATH)/$(HTML_OBJ) ] ; then  rm $(HTML_PATH)/$(HTML_OBJ) ; fi;
