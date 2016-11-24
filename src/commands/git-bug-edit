@@ -44,7 +44,7 @@ git_bug_edit()
 	if [ "$LINE" = "" ]
 	then
 		rm -f "$FILE"
-		echo "Issue creation was aborted because empty summary (first string)"
+		echo "Issue summary (first line) cannot be empty"
 		exit 0
 	fi
 
@@ -53,7 +53,8 @@ git_bug_edit()
 
 	local HASH_OF_SUMMARY=$(echo "$LINE" | git hash-object -w --stdin)
 	local HASH_OF_DESCRIPTION=$(sed -i 1d "$FILE" | git hash-object -w "$FILE" 2>/dev/null)
-
+	
+	git reset
 	git read-tree "$HASH_OF_ISSUE"^{tree}
 	git update-index --replace --cacheinfo 100644 $HASH_OF_SUMMARY summary
 	git update-index --replace --cacheinfo 100644 $HASH_OF_DESCRIPTION description
