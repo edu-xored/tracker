@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-git_bug_new()
+git_bug_edit()
 {
 	REF="refs/heads/ISSUES"
 
@@ -81,4 +81,4 @@ git_bug_new()
 	rm -f "$FILE"
 }
 
-git_bug_new "$@"
+git_bug_edit "$@"
