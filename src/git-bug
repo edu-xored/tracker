@@ -7,34 +7,34 @@ print_issue()
     local summary="$(git cat-file -p "$(echo `git ls-tree $issue_hash summary` | awk '{print $3}' )")"
     echo $issue $summary
 }
-
+ 
 get_author()
 {
     set $(git cat-file -p "$1")
     echo "$4 $5"
 }
-
+ 
 get_status()
 {
     local issue="$1"
-    local status_hash="$(git cat-file -p "$(git cat-file -p $issue | awk ' /tree/ {print $2}')" | awk ' /status/ {print $3}')"
-    local status="$(git cat-file -p $status_hash)"
+    local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+    local status="$(git cat-file -p "$(echo `git ls-tree $issue_hash status` | awk '{print $3}' )")"
     echo $status
 }
-
+ 
 get_summary()
 {
     local issue="$1"
-    local summary_hash="$(git cat-file -p "$(git cat-file -p $issue | awk ' /tree/ {print $2}')" | awk ' /summary/ {print $3}')"
-    local summary="$(git cat-file -p $summary_hash)"
+    local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+    local summary="$(git cat-file -p "$(echo `git ls-tree $issue_hash summary` | awk '{print $3}' )")"
     echo $summary
 }
-
-get_description()
+ 
+ get_description()
 {
     local issue="$1"
-    local description_hash="$(git cat-file -p "$(git cat-file -p $issue | awk ' /tree/ {print $2}')" | awk ' /description/ {print $3}')"
-    local description="$(git cat-file -p $description_hash)"
+    local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+    local description="$(git cat-file -p "$(echo `git ls-tree $issue_hash description` | awk '{print $3}' )")"
     echo "$description"
 }
  
@@ -91,11 +91,11 @@ git_bug_hash()
     local status="$(get_status $issue)"
     local summary="$(get_summary $issue)"
     local description="$(get_description $issue)"
-
+ 
     # цвета лучше обозначат информационый блок
     TITLE_COLOR='\033[0;33m'
     NORMAL_COLOR='\033[0m'
-    
+
     echo "${TITLE_COLOR}issue $issue ${NORMAL_COLOR}"
     echo "Author: $author"
     echo "Status: $status"
@@ -133,7 +133,7 @@ main()
             list_issues "O"
             exit 0
             ;;
-    esac
+     esac
 
     local workingdir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
     if [ -e "$workingdir/git-bug-$subcommand" ]
@@ -142,7 +142,14 @@ main()
         exit 0
     fi
 
-    git_bug_hash "$subcommand"
+    if [ $(expr length $subcommand) -eq 40 ]
+    then
+        git_bug_hash "$subcommand"
+        exit 0
+    else
+        usage
+        exit 1
+    fi
 }
  
 main "$@"
