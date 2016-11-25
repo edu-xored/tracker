@@ -25,9 +25,16 @@ git_bug_resolve()
 		exit 1
 	fi
 
+#ищем хэш того чего указан короткий хэш
+	local NAME_OF_ISSUE="$(git log --pretty="%H" $1 2>/dev/null)"
+	if [ "$NAME_OF_ISSUE" = "" ]
+	then
+		echo "Error: Issue not found"
+		exit 1
+	fi
+
 #вычисляем хэш issue, проверяем его на существование
 #здесь и далее HASH это хеш блоба, который хранит хэш issue
-	local NAME_OF_ISSUE="$1"
 	local HASH=$(git ls-tree "$REF" "$NAME_OF_ISSUE")
 	if [ "$HASH" = "" ]
 	then
