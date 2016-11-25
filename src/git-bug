@@ -31,13 +31,16 @@ print_issue()
 	local author="$(git log --pretty="%aN" "$issue_hash")"
 	local date="$(git log --pretty="%aD" "$issue_hash")"
 
-	echo $issue
-	echo "Author:	"$author
-	echo "Date:	"$date
-	echo "Status:	"$status
-	echo
-	echo "	"$summary
-	echo "	"$description
+	TITLE_COLOR='\033[0;33m'
+    	NORMAL_COLOR='\033[0m'
+
+    	echo "${TITLE_COLOR}issue $issue ${NORMAL_COLOR}"
+    	echo "Author: $author"
+    	echo "Date: $date"
+    	echo "Status: $status"
+    	echo
+    	echo "\t$summary"
+    	echo "$description" | sed 's/^/\t/'
 }
 
 list_issues()
