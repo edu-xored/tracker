@@ -22,7 +22,13 @@ git_bug_edit()
 	fi
 
 #здесь и далее HASH это хеш блоба, который хранит хэш issue
-	local NAME_OF_ISSUE="$1"
+	local NAME_OF_ISSUE="$(git log --pretty="%H" $1 2>/dev/null)"
+	if [ "$NAME_OF_ISSUE" = "" ]
+	then
+		echo "Error: Issue not found"
+		exit 1
+	fi
+
 	local ISSUE_HASH=$(git ls-tree "$REF" "$NAME_OF_ISSUE")
 	if [ "$ISSUE_HASH" = "" ]
 	then
