@@ -28,8 +28,8 @@ print_issue()
 	local status="$(git cat-file -p "$(echo `git ls-tree $issue_hash status` | awk '{print $3}' )")"
 	local summary="$(git cat-file -p "$(echo `git ls-tree $issue_hash summary` | awk '{print $3}' )")"
 	local description="$(git cat-file -p "$(echo `git ls-tree $issue_hash description` | awk '{print $3}' )")"
-	local author="$(git log -1 --pretty="%aN" "$issue_hash")"
-	local date="$(git log -1 --pretty="%aD" "$issue_hash")"
+	local author="$(git log --max-parents=0 --pretty="%aN" "$issue_hash")"
+	local date="$(git log --max-parents=0 --pretty="%aD" "$issue_hash")"
 
 	TITLE_COLOR='\033[0;33m'
     	NORMAL_COLOR='\033[0m'
