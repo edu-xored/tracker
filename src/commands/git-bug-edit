@@ -41,7 +41,7 @@ git_bug_edit()
 	local OLD_SUMMARY="$(git cat-file -p "$(echo `git ls-tree "$HASH_OF_ISSUE" summary` | awk '{print $3}' )")"
 	local OLD_DESCRIPTION="$(git cat-file -p "$(echo `git ls-tree "$HASH_OF_ISSUE" description` | awk '{print $3}' )")"
 	echo "$OLD_SUMMARY" > "$FILE"
-	echo "$OLD_DESCRIPTION" > "$FILE"
+	echo "$OLD_DESCRIPTION" >> "$FILE"
 	"${EDITOR:-vi}" "$FILE"
 
 	[ ! -f "$FILE" ] && exit 0
