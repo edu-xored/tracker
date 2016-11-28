@@ -60,7 +60,10 @@ git_bug_edit()
 	[ -f "$GIT_DIR/index" ] && mv -f "$GIT_DIR/index" "$GIT_DIR/index$$"
 
 	local HASH_OF_SUMMARY=$(echo "$LINE" | git hash-object -w --stdin)
-	local HASH_OF_DESCRIPTION=$(sed -i 1d "$FILE" | git hash-object -w "$FILE" 2>/dev/null)
+	sed '1d' "$FILE" > "$FILE"_temp 2>/dev/null
+	local HASH_OF_DESCRIPTION=$(git hash-object -w "$FILE"_temp 2>/dev/null)
+	rm -f "$FILE"_temp
+
 	
 	git reset
 	git read-tree "$HASH_OF_ISSUE"^{tree}
