@@ -39,7 +39,10 @@ git_bug_new()
 
 	local HASH_OF_STATUS=$(echo open | git hash-object -w --stdin)
 	local HASH_OF_SUMMARY=$(echo "$LINE" | git hash-object -w --stdin)
-	local HASH_OF_DESCRIPTION=$(sed -i 1d "$FILE" | git hash-object -w "$FILE" 2>/dev/null)
+	sed '1d' "$FILE" > "$FILE"_temp 2>/dev/null
+	local HASH_OF_DESCRIPTION=$(git hash-object -w "$FILE"_temp 2>/dev/null)
+	rm -f "$FILE"_temp
+
 
 	git update-index --add --cacheinfo 100644 $HASH_OF_STATUS status
 	git update-index --add --cacheinfo 100644 $HASH_OF_SUMMARY summary
