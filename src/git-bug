@@ -79,6 +79,7 @@ usage()
 	<subcommand> can be :
 	new 			create new issue
 	resolve			resolve issue
+	edit			edit issue
 	"
 }
 
