@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-print_issue()
+print_short_issue()
 {
 	local issue="$1"
 	local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
@@ -14,6 +14,33 @@ get_status()
 	local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
 	local status="$(git cat-file -p "$(echo `git ls-tree $issue_hash status` | awk '{print $3}' )")"
 	echo $status
+}
+
+print_issue()
+{
+	local issue="$1"
+	local issue_hash="$(git cat-file -p "$(echo `git ls-tree $REF $issue` | awk '{print $3}' )")"
+	if [ "$issue_hash" = "" ]
+	then
+		echo "Error: not an issue"
+		exit 1
+	fi
+	local status="$(git cat-file -p "$(echo `git ls-tree $issue_hash status` | awk '{print $3}' )")"
+	local summary="$(git cat-file -p "$(echo `git ls-tree $issue_hash summary` | awk '{print $3}' )")"
+	local description="$(git cat-file -p "$(echo `git ls-tree $issue_hash description` | awk '{print $3}' )")"
+	local author="$(git log --max-parents=0 --pretty="%aN" "$issue_hash")"
+	local date="$(git log --max-parents=0 --pretty="%aD" "$issue_hash")"
+
+	TITLE_COLOR='\033[0;33m'
+    	NORMAL_COLOR='\033[0m'
+
+    	echo "${TITLE_COLOR}issue $issue ${NORMAL_COLOR}"
+    	echo "Author: $author"
+    	echo "Date: $date"
+    	echo "Status: $status"
+    	echo
+    	echo "\t$summary"
+    	echo "$description" | sed 's/^/\t/'
 }
 
 list_issues()
@@ -32,13 +59,13 @@ list_issues()
 
 		case "$MODE" in
 			"A")
-				print_issue $issue
+				print_short_issue $issue
 				;;
 			"O")
-				[ "$status" = "open" ] && print_issue $issue
+				[ "$status" = "open" ] && print_short_issue $issue
 				;;
 			"R")
-				[ "$status" = "resolved" ] && print_issue $issue
+				[ "$status" = "resolved" ] && print_short_issue $issue
 				;;
 		esac
 
@@ -88,12 +115,20 @@ main()
 	esac
 
 	local workingdir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
-	if [ ! -e "$workingdir/git-bug-$subcommand" ]
+	if [ -e "$workingdir/git-bug-$subcommand" ]
 	then
-		usage
-		exit 1
+		"$workingdir/git-bug-$subcommand" "$@"
+		exit 0
 	fi
-	"$workingdir/git-bug-$subcommand" "$@"
+	
+	local issue_hash="$(git log --pretty="%H" $subcommand 2>/dev/null)"
+	if [ ! "$issue_hash" = "" ]
+	then
+		print_issue $issue_hash
+		exit 0
+	fi
+
+	usage
 }
 
 main "$@"
