@@ -74,3 +74,12 @@ Web interface is in [tracker-web](https://github.com/edu-xored/tracker-web).
 * Current tasks are available in the [TODO.md](TODO.md) file.
 * Documentation of the Git internals: https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain
 * Article about writing a Git plugin: https://adamcod.es/2013/07/12/how-to-create-git-plugin.html
+* Some research on the matter: https://github.com/matthiasbeyer/distributed-issue-tracking
+
+## Similar projects (and differences from them)
+
+* [git-issues](https://github.com/duplys/git-issues) - standalone Python script, requires Python
+* [ticgit](https://github.com/jeffWelling/ticgit) - requires Ruby
+* [gitissius](https://github.com/glogiotatidis/gitissius) - requires Python
+
+We strongly believe a Git issue tracker must not bring any additional dependencies besides what Git itself depend on and must work whenever Git works. This means it must be written in Bash/C. 
