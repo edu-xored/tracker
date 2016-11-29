@@ -1,0 +1,96 @@
+#!/usr/bin/env sh
+
+git_bug_edit()
+{
+	REF="refs/heads/ISSUES"
+
+#ищем путь до репозитория и проверяем на его наличие
+	local GIT_DIR="$(git rev-parse --show-toplevel)"/.git
+	if [ ! -d "$GIT_DIR" ]
+	then
+		exit 1
+	fi
+
+#файл в котором заполняется ишуя
+	local FILE="$GIT_DIR/ISSUE_EDIT"
+
+#проверка существует ли хотя бы одно issue
+	if ! git show-ref --quiet --verify "$REF"
+	then
+		echo "Error: Not created any issue"
+		exit 1
+	fi
+
+#здесь и далее HASH это хеш блоба, который хранит хэш issue
+	NAME_OF_ISSUE="$(git log --pretty="%H" $1 2>/dev/null)"
+	if [ "$NAME_OF_ISSUE" = "" ]
+	then
+		echo "Error: Issue not found"
+		exit 1
+	fi
+
+	ISSUE_HASH=$(git ls-tree "$REF" "$NAME_OF_ISSUE")
+	if [ "$ISSUE_HASH" = "" ]
+	then
+		echo "Error: Issue not found"
+		exit 1
+	fi
+
+	local HASH_OF_ISSUE="$(git cat-file -p "$(echo "$ISSUE_HASH" | awk '{print $3}' )")"	
+
+	local OLD_SUMMARY="$(git cat-file -p "$(echo `git ls-tree "$HASH_OF_ISSUE" summary` | awk '{print $3}' )")"
+	local OLD_DESCRIPTION="$(git cat-file -p "$(echo `git ls-tree "$HASH_OF_ISSUE" description` | awk '{print $3}' )")"
+	echo "$OLD_SUMMARY" > "$FILE"
+	echo "$OLD_DESCRIPTION" >> "$FILE"
+	"${EDITOR:-vi}" "$FILE"
+
+	[ ! -f "$FILE" ] && exit 0
+
+#считывается первая строка и убираются все незначащие пробелы + табуляция
+	local LINE="$(echo $(sed -n 1p "$FILE"))"
+
+	if [ "$LINE" = "" ]
+	then
+		rm -f "$FILE"
+		echo "Issue summary (first line) cannot be empty"
+		exit 0
+	fi
+
+#прячем индекс, чтобы замести следы
+	[ -f "$GIT_DIR/index" ] && mv -f "$GIT_DIR/index" "$GIT_DIR/index$$"
+
+	local HASH_OF_SUMMARY=$(echo "$LINE" | git hash-object -w --stdin)
+	sed '1d' "$FILE" > "$FILE"_temp 2>/dev/null
+	local HASH_OF_DESCRIPTION=$(git hash-object -w "$FILE"_temp 2>/dev/null)
+	rm -f "$FILE"_temp
+
+	
+	git reset
+	git read-tree "$HASH_OF_ISSUE"^{tree}
+	git update-index --replace --cacheinfo 100644 $HASH_OF_SUMMARY summary
+	git update-index --replace --cacheinfo 100644 $HASH_OF_DESCRIPTION description
+
+	local TREE=$(git write-tree)
+	git rm summary >/dev/null 2>&1
+	git rm description >/dev/null 2>&1
+	
+	local HASH_OF_ISSUE=$(echo issue edit | git commit-tree $TREE -p "$HASH_OF_ISSUE")
+
+#HASH это хеш блоба, который хранит хэш ишуи
+	local HASH=$(echo $HASH_OF_ISSUE | git hash-object -w --stdin)
+	
+	git read-tree "$REF"^{tree}
+	git update-index --replace --cacheinfo 120000 $HASH $NAME_OF_ISSUE
+	local TREE=$(git write-tree)
+	local HASH_OF_ISSUES=$(echo issues | git commit-tree $TREE -p "$REF")
+
+	git update-ref "$REF" $HASH_OF_ISSUES
+
+#чистим индекс и возвращаем спрятанный
+	rm -f "$GIT_DIR/index"
+	[ -f "$GIT_DIR/index$$" ] && mv -f "$GIT_DIR/index$$" "$GIT_DIR/index"
+
+	rm -f "$FILE"
+}
+
+git_bug_edit "$@"
