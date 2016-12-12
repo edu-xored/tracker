@@ -9,7 +9,7 @@ We have a stub (a pretty dumb one) for man. Need to write the real doc for every
 
 Writing man pages manually is very tiresome. We need to integrate a flow to generates man pages from asciidocs documents (like Git does). Examples are Git itself, https://github.com/dsavenko/agnostic, and many others.
 
-### 5: Make push/pull/clone work
+### (!) 5: Make push/pull/clone work
 
 For now, `git push` doesn't push issues to the server, so subsequent `git clone` or `git fetch` in another place clones/fetches an empty ISSUES branch.
 
