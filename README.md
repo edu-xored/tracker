@@ -3,6 +3,16 @@
 
 Git-based distributed issue tracker. With it you can use Git repository for storing issues (bugs, tasks, improvements, etc). The issues are operated in a manner typical to Git and other DVCSs. I.e. when a project is fetched locally, the issues storage is fetched as well. The user then may operate locally with their copy of the issue storage, then push the updated issues.
 
+## !! Current tasks, and how to contribute !!
+
+Until we get a functional MVP, all tasks are in the [TODO.md](TODO.md) file. If you want to help the project, look at [TODO.md](TODO.md) and provide a pull request for some task from there :)
+
+When we get MVP, all tasks will be tracked using the project itself (dog-food).
+
+If you have a question, please use our mailing list edu-tracker@xored.com.
+
+## Description
+
 An issue (or *bug*) has the following attributes:
 
 1. Hash - unique identifier of the issue;
