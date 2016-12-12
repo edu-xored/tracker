@@ -5,7 +5,7 @@ Git-based distributed issue tracker. With it you can use Git repository for stor
 
 ## !! Current tasks, and how to contribute !!
 
-Until we get a functional MVP, all tasks are in the [TODO.md](TODO.md) file. If you want to help the project, look at [TODO.md](TODO.md) and provide a pull request for some task from there :)
+Until we get an MVP, all tasks are in the [TODO.md](TODO.md) file. If you want to help the project, look at [TODO.md](TODO.md) and provide a pull request for some task from there :)
 
 When we get MVP, all tasks will be tracked using the project itself (dog-food).
 
